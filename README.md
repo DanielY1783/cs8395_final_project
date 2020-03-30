@@ -8,6 +8,5 @@ The existing code expects the data to be organized in a `data/` folder with sub-
 
 NOTE: The current `DataLoader` loads every image into RAM at the same time. This requires ~32 GB RAM total.
 
-Training: 0-30
-Validation: 31-35
-Testing: 36-40
+Training: 6-40
+Validation: 1-5

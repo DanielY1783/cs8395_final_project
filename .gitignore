@@ -128,6 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-
 # Large data files.
 data/
+
+# Pycharm files
+*.idea/ 
