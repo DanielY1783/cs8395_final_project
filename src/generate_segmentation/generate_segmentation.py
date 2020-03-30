@@ -14,8 +14,19 @@ ORIGINAL_SEGS = "../../data/Training/label/"
 # File path to generated segmentations
 GENERATED = "../../data/generated_segmentation/"
 
-def grow_images(image, file_name, iterations=2, number=4, weight=0.5, std=0.2):
+def grow_images(image, file_name, iterations=2, number=2, weight=0.6, std=0.2):
+    """
+    Grow segmentations by taking sum of neighboring pixels, adding a bit of Gaussian noise for
+    randomness, and thresholding.
 
+    :param image: Nib image with original segmentation
+    :param file_name: String name of original segmentation
+    :param iterations: Number of iterations to grow for
+    :param number: Number of segmentations to generate
+    :param weight: Weight for sum of neighboring pixels. Increase to grow more
+    :param std: Standard deviation for gaussian noise. Increase for more noise.
+    :return: None
+    """
     # Get the original image data
     original_image_data = image.get_fdata()
     # Get the x, y, z dimensions
@@ -55,8 +66,19 @@ def grow_images(image, file_name, iterations=2, number=4, weight=0.5, std=0.2):
         nib.save(image, GENERATED + "grow" + str(n) + "_" + file_name)
 
 
-def shrink_images(image, file_name, iterations=5, number=2, weight=0.2, std=0.1):
+def shrink_images(image, file_name, iterations=5, number=2, weight=0.25, std=0.1):
+    """
+    Grow segmentations by taking sum of neighboring pixels, adding a bit of Gaussian noise for
+    randomness, and thresholding.
 
+    :param image: Nib image with original segmentation
+    :param file_name: String name of original segmentation
+    :param iterations: Number of iterations to grow for
+    :param number: Number of segmentations to generate
+    :param weight: Weight for sum of neighboring pixels. Decrease to shrink more.
+    :param std: Standard deviation for gaussian noise. Increase for more noise.
+    :return: None
+    """
     # Get the original image data
     original_image_data = image.get_fdata()
     # Get the x, y, z dimensions
