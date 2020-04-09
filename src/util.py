@@ -4,7 +4,7 @@
 # Some code from: https://github.com/pytorch/examples/blob/master/mnist/main.py
 
 import argparse
-
+import gc
 import nibabel as nib
 import numpy as np
 import os
@@ -23,6 +23,8 @@ TEST_DATA = DATA_DIR + '/Testing/img'
 TR_DATA_LABELS = DATA_DIR + '/Training/label'
 VAL_DATA_LABELS = DATA_DIR + '/Validation/label'
 TEST_DATA_LABELS = DATA_DIR + '/Testing/label'
+GAN_TR_DATA = DATA_DIR + '/gan_output/images'
+GAN_TR_DATA_LABELS = DATA_DIR + '/gan_output/segmentations'
 
 TARGET_LABEL = 1
 
@@ -30,19 +32,32 @@ TARGET_LABEL = 1
 class CTImageDataset(Dataset):
     """CT Image Dataset"""
 
-    def __init__(self, image_dir=TR_DATA, seg_image_dir=TR_DATA_LABELS, testing=False):
+    def __init__(self, image_dir=TR_DATA, seg_image_dir=TR_DATA_LABELS, val=False, testing=False):
         """
         Initialize dataset. Load into memory for faster access.
         :param image_dir: the image directory
         :param seg_image_dir: the segmentation image directory
+        :param val: if True, in validation mode
         :param testing: if True, in testing mode (do not pull segmentations)
         """
+
+        self.val = val
+        self.testing = testing
+
+        if not self.val and not self.testing:
+            print('START: Loading gan_output images')
+
+            self.gan_output_images = set(os.listdir(GAN_TR_DATA))
+            self.gan_output_images = self.gan_output_images.intersection(set(os.listdir(GAN_TR_DATA_LABELS)))
+            self.gan_output_segs = [GAN_TR_DATA_LABELS + '/' + fn for fn in self.gan_output_images]
+            self.gan_output_images = [GAN_TR_DATA + '/' + fn for fn in self.gan_output_images]
+
+            print('END: Loading gan_output images')
 
         print('START: Loading images')
 
         self.image_dir = image_dir
         self.seg_image_dir = seg_image_dir
-        self.testing = testing
 
         image_fns = os.listdir(self.image_dir)
         image_fns.sort()
@@ -75,10 +90,27 @@ class CTImageDataset(Dataset):
         print('END: Loading images')
 
     def __len__(self):
-        return len(self.images)
+        return len(self.images) + len(self.gan_output_images) if not self.val and not self.testing else len(self.images)
 
     def __getitem__(self, idx):
-        return self.images[idx], (self.seg_images[idx] if not self.testing else self.images[idx])
+        if not self.val and not self.testing and idx >= len(self.images):
+            idx -= len(self.images)
+            image = self.gan_output_images[idx]
+            image = np.array(Image.open(image).convert('L').resize((IMAGE_INPUT_SIZE, IMAGE_INPUT_SIZE)))
+            image = image.reshape((IMAGE_INPUT_SIZE, IMAGE_INPUT_SIZE, 1)).transpose(2, 0, 1)
+            image = np.array(image, dtype=np.float32)
+
+            if self.testing:
+                return image, image
+
+            seg = self.gan_output_segs[idx]
+            seg = np.array(Image.open(seg).convert('L').resize((IMAGE_INPUT_SIZE, IMAGE_INPUT_SIZE)))
+            seg = seg.reshape((IMAGE_INPUT_SIZE, IMAGE_INPUT_SIZE, 1)).transpose(2, 0, 1)
+            seg = np.array((seg > 0) * 1, dtype=np.float32)
+
+            return image, seg
+        else:
+            return self.images[idx], (self.seg_images[idx] if not self.testing else self.images[idx])
 
 
 def get_args():
@@ -93,7 +125,7 @@ def get_args():
     parser.add_argument('--test-batch-size', type=int, default=1000,
                         metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=100, metavar='N',
+    parser.add_argument('--epochs', type=int, default=75, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                         help='learning rate (default: 0.001)')

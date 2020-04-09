@@ -44,8 +44,8 @@ def main():
     model, device = load_model()
 
     test_data = CTImageDataset(image_dir=TEST_IMAGE_DIR, seg_image_dir=None, testing=True)
-    tr_data = CTImageDataset(image_dir=TR_IMAGE_DIR, seg_image_dir=TR_SEG_DIR)
-    val_data = CTImageDataset(image_dir=VAL_IMAGE_DIR, seg_image_dir=VAL_SEG_DIR)
+    tr_data = CTImageDataset(image_dir=TR_IMAGE_DIR, seg_image_dir=TR_SEG_DIR, val=True)
+    val_data = CTImageDataset(image_dir=VAL_IMAGE_DIR, seg_image_dir=VAL_SEG_DIR, val=True)
 
     with torch.no_grad():
         dice_all = []

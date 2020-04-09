@@ -134,7 +134,7 @@ def main():
 
     # get data
     tr_data = CTImageDataset(image_dir=TR_DATA, seg_image_dir=TR_DATA_LABELS)
-    val_data = CTImageDataset(image_dir=VAL_DATA, seg_image_dir=VAL_DATA_LABELS)
+    val_data = CTImageDataset(image_dir=VAL_DATA, seg_image_dir=VAL_DATA_LABELS, val=True)
     data_loader = DataLoader(tr_data,
                              batch_size=args.batch_size,
                              num_workers=0,
